@@ -486,4 +486,40 @@ case 2:
 return 0;
 }
 
+cin >> password;
+        length = strlen(password);
+    }
 
+    if (testPass(password))
+        cout << "Your password is valid." << endl;
+    else
+    {
+        cout << "Your password is not valid. ";
+        cout << "Please refer to the above warning message." << endl;
+    }
+
+    delete[] password ; // hey!! don't forget to free your allocated memory!!!
+    return 0;
+}
+
+/*This function will check each input and ensure that the password
+contains a uppercase, lowercase, and digit.*/
+
+bool testPass(char pass[]) // a beautiful hack (:
+{
+	// flags
+	bool aUpper = false,
+		 aLower = false,
+		 aDigit = false ;
+	for ( int i = 0 ; pass[i] ; ++i )
+		if ( isupper(pass[i]) )
+			aUpper = true ;
+		else if ( islower(pass[i]) )
+			aLower = true ;
+		else if ( isdigit(pass[i]) )
+			aDigit = true ;
+	if ( aUpper && aLower && aDigit )
+		return true;
+	else
+		return false ;
+}
