@@ -395,7 +395,7 @@ using namespace std;
 
 int main()
 {
-  int x,x1=1,x3,ch2,ch,temp,room_no,cmp1,cmp2,f=0;
+  int x,x1=1,x3,ch2,ch,temp,room_no,cmp1,cmp2,f=0;///Need to initialize ch2=1 here.....
   double p_no;
   char id[20],pwd[20],name[20],city[10],g[10];
   Customer c; Manager m;
