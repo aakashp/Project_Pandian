@@ -4,8 +4,8 @@
 
  HMS2_cu.hpp
  
-#ifndef HMS2_cu.hpp
-#define HMS2_cu.hpp
+#ifndef HMS2_cu_hpp
+#define HMS2_cu_hpp
 class Customer
 {
   public:
@@ -13,17 +13,38 @@ class Customer
         int login(char[],char[]);
         void registration(char[],char[],char[],double,char[],char[]);
 
-        void book(int);
+        void book(int,char[]);
         void viewroomdetails();
-
+        void cancellation(int);
 
 };
 #endif
+
+**********************************************************************************
+HMS2_man.hpp
+
+
+
+#ifndef HMS2_man_hpp
+#define HMS2_man_hpp
+#include"HMS2_cu.hpp"
+class Manager:public Customer
+{
+  public:
+
+    void view(void);
+    void payment(double);
+
+};
+#endif
+
+
 ***********************************************************************************
 HMS2.pc
 
 
 #include"HMS2_cu.hpp"
+#include"HMS2_man.hpp"
 #include<iostream>
 #include<cstring>
 #include<string.h>
@@ -34,16 +55,18 @@ using namespace std;
 EXEC SQL INCLUDE SQLCA.H;
 
 EXEC SQL BEGIN DECLARE SECTION;
-char userId[20];
+char userId[20],d_date[20];
 char pwd[20];
 char x[20],a[30],b[30],i[20],j[20],k[20],l[20],p[30];
-char y[20],m[30];
-char d_uname[20];
+char y[20],m[30],date[20];
+int d_room_no1,d_amt1,d_refund1;
+char d_cust_name1[20],d_date1[20];
+char d_uname[20],d_name[20];
 char d_room_type[10],d_available[30];
-int d_room_no,d_tariff,cmp1,cmp2,f=0;
+int d_room_no,d_tariff,cmp1,cmp2,f=0,one_more,d_cancel;
 char d_password[20];
 char c_name[20];
-int ch,ch2=1,cal;
+int ch,ch2=1,cal,total,n_total;
 char c_city[10];
 double c_phone;
 char dummy1[20],dummy2[20];
@@ -60,8 +83,6 @@ bool Customer::connection()
  else
  return true;
 }
-
-
 
 int Customer::login(char user[20],char pass[20])
 {
@@ -103,13 +124,14 @@ int Customer::login(char user[20],char pass[20])
          }
       }
   if(f==1)
+
  {
-  cout<<"Login Successfull\n";
+  cout<<"\n\t\tLogged in Successfull!!!\n";
     return 0;/*
 do
 {
   cout<<"Welcome Customer\n";
-  cout<<"Press\n"<<"1. To view Rooms\n"<<"2.To Book a Room\n"<<"3.To exit\n";
+  cout<<"Press\n"<<"1. To view Rooms\n"<<"2.To Book a Room\n"<<"3.To cancel your booking\n"<<"\n4.To exit";
   cin>>ch;
   switch(ch)
      {
@@ -119,10 +141,18 @@ do
                 //cout<<"Please choose your room";
                 break;
       case 2:
+
                 cout<<"\nPlease enter your room no";
                 cin>>d_room_no;
+                book(d_room_no,d_uname);
+                break;
 
-                book(d_room_no);
+      case 3:
+                cout<<"\nEnter your room no";
+                cin>>d_room_no;
+                cancellation(d_room_no);
+                break;
+
         default:
                 ch2=0;
                 break;
@@ -135,10 +165,10 @@ else
   cout<<"not successful\n";
   return 1;
   }
-  EXEC SQL COMMIT WORK RELEASE;
+ EXEC SQL COMMIT WORK RELEASE;
  }
  else
- {
+    {
         cout<<"Connection failed";
        }
 
@@ -158,7 +188,7 @@ void Customer::registration(char cusname[],char user[],char city[],double phone,
 
         EXEC SQL Insert into cust_details values(:c_name,:d_uname,:c_city,:c_phone,:d_password,:gender);
         EXEC SQL COMMIT WORK RELEASE;
-        cout<<"Customer Details Added Successfully"<<endl;
+        cout<<"\n\t\tCustomer Details Added Successfully!!!"<<endl;
   }
    else
    {
@@ -172,11 +202,11 @@ void Customer::viewroomdetails()
 {
   if(connection())
   {
-         strcpy(p,"AVAILABLE");
+strcpy(p,"AVAILABLE");
    EXEC SQL DECLARE Curs2 CURSOR for select * from Rooms where availability=:p;
    EXEC SQL OPEN Curs2;
    if(sqlca.sqlcode <0)
-  {
+   {
     cout<<"Error in Execution";
    }
    for(;;)
@@ -188,13 +218,13 @@ void Customer::viewroomdetails()
     {
      cout<<"Error in Execute";
     }
-    cout<<"***Room Details***"<<endl;
-    cout<<"Room No : "<<d_room_no<<endl;//int
-    cout<<"Room Type : "<<d_room_type<<endl; //varchar
-    cout<<"Tariff: "<<d_tariff<<endl; //int
-    cout<<"Availability : "<<d_available<<endl;//varchar
+    cout<<"**********************************Room Details******************"<<endl;
+    cout<<"\n\n\t\tRoom No : "<<d_room_no<<endl;//int
+    cout<<"\n\t\tRoom Type : "<<d_room_type<<endl; //varchar
+    cout<<"\n\t\tTariff: "<<d_tariff<<endl; //int
+    cout<<"\n\t\tAvailability : "<<d_available<<endl;//varchar
     }
-    cout<<"******************"<<endl;
+    cout<<"****************************************************************"<<endl;
     EXEC SQL COMMIT WORK RELEASE;
 
     }
@@ -204,19 +234,26 @@ void Customer::viewroomdetails()
     }
 }
 
-void Customer::book(int room_id)
+void Customer::book(int room_id,char uname[])
 {
 if(connection())
   {
+cout<<"\n\t\t Enter date of arrival:";
+                cin>>date;
    d_room_no = room_id;
+   strcpy(d_uname,uname);
         strcpy(m,"booked");
+strcpy(d_date,date);
    EXEC SQL update Rooms set availability=:m where room_No=:d_room_no;
+    EXEC SQL SELECT c_name into :d_name from cust_details where uname=:d_uname;
+  cout<<"\n\t\tHow many days you want to stay?";
+  cin>>one_more;
 
    if(sqlca.sqlcode <0)
- {
+   {
     cout<<"Error in Execution";
    }
-   EXEC SQL COMMIT WORK RELEASE;
+
 
 
 }
@@ -231,22 +268,117 @@ if(connection())
 
   if(d_room_no>=101 && d_room_no<111)
   {
-    cal=85;
-  }
+    cal=one_more*85;
+    total= (850*one_more)-cal;
+    n_total= 850*one_more*.15+total;
+
+
+ }
 else  if(d_room_no>=201 && d_room_no<211)
   {
-    cal=150;
+    cal=one_more*150;
+     total= (1500*one_more)-cal;
+    n_total= 1500*one_more*.15+total;
+
+
+
   }
 else
 {
-  cal=300;
-  }
+  cal=one_more*300;
+    total= (3000*one_more)-cal;
+    n_total= 3000*one_more*.15+total;
 
-  cout<<"Your room is booked now, You have to pay $"<<cal<<"amount";
+
+  }
+EXEC SQL insert into man_details (room_no,cust_name,date_of_arr,amt_left,advance) values (:d_room_no,:d_name,:d_date,:n_total,:cal);
+
+ EXEC SQL COMMIT WORK RELEASE;
+
+  cout<<"\n\n\t\tYour room is booked now, You have to pay $"<<cal<<" as your advance booking fees";
+ cout<<"\n\t\tYour total amount to pay $"<<n_total;
 
 }
 
 
+
+//From HMS3.pc
+
+void Manager::view()
+{
+if(connection())
+{
+   EXEC SQL DECLARE Curs10 CURSOR for select * from man_details;
+   EXEC SQL OPEN Curs10;
+   if(sqlca.sqlcode <0)
+   {
+
+
+
+cout<<"Error in Execution";
+   }
+   for(;;)
+   {
+    EXEC SQL FETCH Curs10 Into :d_room_no1,:d_cust_name1,:d_date1,:d_amt1,:d_refund1;
+    if(sqlca.sqlcode == NODATAFOUND)
+    { break;}
+    if(sqlca.sqlcode <0)
+    {
+     cout<<"Error in Execute";
+    }
+    cout<<"\n\n*****************************Room Details***********************"<<endl;
+    cout<<"\n\tRoom No : "<<d_room_no1<<endl;//int
+    cout<<"\n\tCustomer Name: "<<d_cust_name1<<endl; //varchar
+    cout<<"\n\tDate of booking: "<<d_date1<<endl; //int
+    cout<<"\n\tRefund : "<<d_refund1<<endl;//varchar
+    }
+    cout<<"******************************************************************"<<endl;
+    EXEC SQL COMMIT WORK RELEASE;
+}
+else
+{
+      cout<<"Connection failed";
+}
+
+}
+
+
+
+
+void Customer::cancellation(int room_id)
+{
+if(connection())
+  {
+        d_room_no=room_id;
+        strcpy(m,"AVAILABLE");
+        EXEC SQL update Rooms set availability=:m where room_No=:d_room_no;
+
+   EXEC SQL DECLARE Curs11 CURSOR for select advance  from man_details where room_No=:d_room_no;
+   EXEC SQL OPEN Curs11;
+
+for(;;)
+   {
+    EXEC SQL FETCH Curs11 Into :d_refund1;
+    if(sqlca.sqlcode == NODATAFOUND)
+    { break;}
+ if(sqlca.sqlcode <0)
+   {
+    cout<<"";
+   }
+
+        cout<<"\n\n\t\tRoom Booking cancelled Successfully"<<endl;
+        cout<<"\n\tAdvance charges were : "<<d_refund1;
+        d_cancel=d_refund1-(0.02*d_refund1);
+        cout<<"\n\tYour refund afer cancellation is: "<<d_cancel;
+}
+   EXEC SQL delete from man_details where room_No=:d_room_no;
+ EXEC SQL COMMIT WORK RELEASE;
+}
+ else
+    {
+      cout<<"Connection failed";
+    }
+}
 
 
 ********************************************************************************
@@ -254,6 +386,7 @@ else
 HMS.cpp
 
 #include"HMS2_cu.hpp"
+#include"HMS2_man.hpp"
 #include<iostream>
 #include<string.h>
 #include<cstring>
@@ -262,75 +395,95 @@ using namespace std;
 
 int main()
 {
-  int x,ch2,ch,temp,room_no;
-double p_no;
+  int x,x1=1,x3,ch2,ch,temp,room_no,cmp1,cmp2,f=0;
+  double p_no;
   char id[20],pwd[20],name[20],city[10],g[10];
-  Customer c;
- cout<<"Welcome to G L Resorts"<<endl;
- cout<<"Press"<<endl <<"1. Login"<<endl<<"2. Register"<<endl;
- cin>>ch;
-switch(ch)
+  Customer c; Manager m;
+do
 {
-case 1:
-  {
-    cout<<"Enter your registered email id"<<endl;
-    cin>>id;
-    cout<<"Enter your password"<<endl;
-    cin>>pwd;
-    temp= c.login(id,pwd);
-    if(temp==0)
+    cout<<"***************************************************************\n\n"<<endl;
+    cout<<"\t\t\t\tWelcome to G L Resorts\n"<<endl;
+    cout<<"Enter your choice.....\n"<<endl <<"\t\t\t1. Existing user? Login Here...."<<endl<<"\t\t\t2. New User? Register Here......"<<endl<<"\t\t\t3. Exit";
+    cin>>ch;
+    switch(ch)
     {
-     do
+     case 1:
      {
-       cout<<"Welcome Customer\n";
-       cout<<"Press\n"<<"1. To view Rooms\n"<<"2.To Book a Room\n"<<"3.To exit\n";
-       cin>>ch;
-       switch(ch)
-        {
-        case 1:
-               cout<<"\nThese are available rooms";
-               c.viewroomdetails();
-                break;
-       case 2:
- cout<<"\nPlease enter your room no";
-                cin>>room_no;
-                c.book(room_no);
-                break;
-       default:
-                ch2=0;
-                break;
+       cout<<"\n\n\t\tLogin screen"<<endl;
+       cout<<"\n\tEnter your registered email id"<<endl;
+       cin>>id;
+       cout<<"\n\tEnter your password"<<endl;
+       cin>>pwd;
+       if(!(strcmp(id,"manager")))
+       {
+           f=1;
+           m.view();
+           break;
+       }
+
+
+           temp= c.login(id,pwd);
+           if(temp==0)
+           {
+           do
+           {
+             cout<<"\n\n\t\tWelcome Customer\n";
+             cout<<"\n\t\tEnter your choice:\n"<<"\t1. To view Rooms\n"<<"\t2.To Book a Room\n"<<"\t3.To cancel your booking\n"<<"\t4.To exit\n";
+             cin>>ch;
+             switch(ch)
+             {
+              case 1:
+              cout<<"\n\tThese are available rooms";
+
+              c.viewroomdetails();
+              break;
+              case 2:
+               cout<<"\n\tPlease enter your room no";
+               cin>>room_no;
+               c.book(room_no,id);
+               break;
+
+              case 3:
+                cout<<"\n\tEnter your room no";
+                 cin>>room_no;
+                 c.cancellation(room_no);
+                 break;
+
+
+               default:
+                  ch2=0;
+                   break;
          }
 
       }while(ch2==1);
+              }
 
-
-
-     }
   }
    break;
 case 2:
-    cout<<"Enter your Name "<<endl;
+    cout<<"\n\n\tEnter your Name "<<endl;
     cin>>name;
-    cout<<"Enter your city"<<endl;
+    cout<<"\n\tEnter your city"<<endl;
     cin>>city;
-    cout<<"Enter your phone no"<<endl;
+    cout<<"\n\tEnter your phone no"<<endl;
     cin>>p_no;
-    cout<<"Enter your Gender"<<endl;
+    cout<<"\n\tEnter your Gender"<<endl;
     cin>>g;
-    cout<<"Enter your email id"<<endl;
+    cout<<"\n\tEnter your email id"<<endl;
     cin>>id;
-    cout<<"Enter your password"<<endl;
+    cout<<"\n\tEnter your password"<<endl;
     cin>>pwd;
     c.registration(name,id,city, p_no,pwd,g);
     break;
 
  default:
-   cout<<"Enter any valid no";
+   x1=0;
+   cout<<"\n\tEnter any valid no";
    break;
 }
+
+}while(x1==1);
 return 0;
 }
-**********************************************
-
 
 
